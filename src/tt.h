@@ -1,6 +1,9 @@
 #ifndef TT_H
 #define TT_H
 
+#include <sys/types.h>
+#include <time.h>
+
 #define TT_CMDLINE_MAX 1024
 #define TT_LINK_MAX 1024
 
@@ -11,6 +14,7 @@
 struct task
 {
 	pid_t pid;
+	time_t atime;
 	char cmdline[TT_CMDLINE_MAX];
 	char cwd[TT_LINK_MAX];
 	char exe[TT_LINK_MAX];
@@ -21,6 +25,6 @@ struct task
 	char wm_icon_name[X_PROP_MAX];
 	char wm_name[X_PROP_MAX];
 #endif
-}
+};
 
 #endif
