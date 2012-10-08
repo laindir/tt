@@ -30,7 +30,7 @@ TESTRESULTFILE=test_results
 SRCS:=$(wildcard $(SRCDIR)/*.c)
 DEPS:=$(SRCS:$(SRCDIR)/%.c=$(DEPDIR)/%.d)
 
-MKDIR=mkdir -p
+MKDIR=mkdir
 RMDIR=rmdir
 
 #generated makefiles listing dependencies per source file
@@ -60,15 +60,14 @@ echo "$$t	$$p	$$j"; fi; done; fi; done > $(TESTRESULTFILE); test 0 -eq $$i;
 	$(LINK.o) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 #make an object file from its corresponding source file
-$(OBJDIR)/%.o: $(SRCDIR)/%.c $(OBJDIR)
+$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	$(COMPILE.c) $(OUTPUT_OPTION) $<
 
 #make dependency file by parsing the corresponding source file
 #not an ideal solution:
 #providing a rule to make these causes them all to be built even if not needed
 #could conditionally include, but that would be even uglier
-#additionally, depending on the directory causes all to be rebuilt
-$(DEPDIR)/%.d: $(SRCDIR)/%.c $(DEPDIR)
+$(DEPDIR)/%.d: $(SRCDIR)/%.c | $(DEPDIR)
 	$(CC) -MG -MM $< | sed -e 's|^|$@ $(OBJDIR)/|' > $@
 
 $(OBJDIR):
