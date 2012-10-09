@@ -30,6 +30,7 @@ TESTRESULTFILE=test_results
 SRCS:=$(wildcard $(SRCDIR)/*.c)
 DEPS:=$(SRCS:$(SRCDIR)/%.c=$(DEPDIR)/%.d)
 
+MAKEDEPEND=cc
 MKDIR=mkdir
 RMDIR=rmdir
 
@@ -54,21 +55,19 @@ echo "$$t	$$p	$$j"; fi; done; fi; done > $(TESTRESULTFILE); test 0 -eq $$i;
 
 .PHONY: test clean
 
+.SUFFIXES:
+
+.SECONDARY:
+
 #pattern rules
-#make an binary from its corresponding object file
+#make a binary from its corresponding object file
 %: $(OBJDIR)/%.o
 	$(LINK.o) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 #make an object file from its corresponding source file
-$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
+$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR) $(DEPDIR)
+	$(MAKEDEPEND) -MG -MM $< | sed -e 's|^|$(OBJDIR)/|' > $(DEPDIR)/$*.d
 	$(COMPILE.c) $(OUTPUT_OPTION) $<
-
-#make dependency file by parsing the corresponding source file
-#not an ideal solution:
-#providing a rule to make these causes them all to be built even if not needed
-#could conditionally include, but that would be even uglier
-$(DEPDIR)/%.d: $(SRCDIR)/%.c | $(DEPDIR)
-	$(CC) -MG -MM $< | sed -e 's|^|$@ $(OBJDIR)/|' > $@
 
 $(OBJDIR):
 	$(MKDIR) $(OBJDIR)
