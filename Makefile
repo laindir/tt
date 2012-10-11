@@ -53,7 +53,7 @@ for t in $(TESTDIR)/"$$p"_*.sh; do if [ -f "$$t" ]; then \
 sh "$$t" ./"$$p" 2>&1 > /dev/null; j=$$?; i=$$(( i | j )); \
 echo "$$t	$$p	$$j"; fi; done; fi; done > $(TESTRESULTFILE); test 0 -eq $$i;
 
-.PHONY: test clean
+.PHONY: all test clean
 
 .SUFFIXES:
 
