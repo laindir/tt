@@ -15,33 +15,32 @@
 # You should have received a copy of the GNU General Public License
 # along with tt.  If not, see <http://www.gnu.org/licenses/>.
 
+MAKEFILE:=$(lastword $(MAKEFILE_LIST))
+
 PROG=tt
 
 all: $(PROG)
 
 CFLAGS=-Wall -Wextra -pedantic -O3
+MAKEDEPENDSFLAGS=-MMD -MP
 
 SRCDIR=src
 OBJDIR=obj
-DEPDIR=dep
 TESTDIR=test
 TESTRESULTFILE=test_results
 
-SRCS:=$(wildcard $(SRCDIR)/*.c)
-DEPS:=$(SRCS:$(SRCDIR)/%.c=$(DEPDIR)/%.d)
+OBJS:=$(wildcard $(OBJDIR)/*.o)
+DEPS:=$(OBJS:%.o=%.d)
 
-MAKEDEPEND=cc
 MKDIR=mkdir
 RMDIR=rmdir
 
 #generated makefiles listing dependencies per source file
-ifneq ($(MAKECMDGOALS),clean)
 -include $(DEPS)
-endif
 
 clean:
-	$(RM) $(PROG) $(OBJDIR)/* $(DEPDIR)/* $(TESTRESULTFILE)
-	$(RMDIR) $(OBJDIR) $(DEPDIR)
+	$(RM) $(PROG) $(OBJDIR)/* $(TESTRESULTFILE)
+	$(RMDIR) $(OBJDIR)
 
 test: $(TESTRESULTFILE)
 
@@ -53,7 +52,7 @@ for t in $(TESTDIR)/"$$p"_*.sh; do if [ -f "$$t" ]; then \
 sh "$$t" ./"$$p" 2>&1 > /dev/null; j=$$?; i=$$(( i | j )); \
 echo "$$t	$$p	$$j"; fi; done; fi; done > $(TESTRESULTFILE); test 0 -eq $$i;
 
-.PHONY: all test clean
+.PHONY: $(MAKEFILE) all test clean
 
 .SUFFIXES:
 
@@ -65,12 +64,19 @@ echo "$$t	$$p	$$j"; fi; done; fi; done > $(TESTRESULTFILE); test 0 -eq $$i;
 	$(LINK.o) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 #make an object file from its corresponding source file
-$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR) $(DEPDIR)
-	$(MAKEDEPEND) -MG -MM $< | sed -e 's|^|$(OBJDIR)/|' > $(DEPDIR)/$*.d
-	$(COMPILE.c) $(OUTPUT_OPTION) $<
+$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
+	$(COMPILE.c) $(MAKEDEPENDSFLAGS) $(OUTPUT_OPTION) $<
 
 $(OBJDIR):
 	$(MKDIR) $(OBJDIR)
 
-$(DEPDIR):
-	$(MKDIR) $(DEPDIR)
+#cancel some implicit rules
+%:: %,v
+
+%:: RCS/%,v
+
+%:: RCS/%
+
+%:: s.%
+
+%:: SCCS/s.%
